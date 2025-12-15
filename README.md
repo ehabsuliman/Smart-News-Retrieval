@@ -1,49 +1,78 @@
 # Smart News Retrieval
 
-Smart Document Retrieval is an information retrieval system designed to efficiently index, search, and retrieve documents using modern NLP techniques.  
-The project focuses on combining traditional information retrieval methods with machine learning and semantic representations to improve search relevance and accuracy.
+Smart News Retrieval is an **Information Retrieval (IR) system** designed to index, search, and retrieve news documents using **LLM-powered parsing**, semantic embeddings, and efficient vector search.  
+The project focuses on building a modern retrieval pipeline that combines large language models with vector-based similarity search to enable accurate and context-aware document retrieval.
 
 ---
 
 ## 🚀 Project Overview
 
-The system processes a collection of documents, builds searchable indexes, and retrieves the most relevant documents based on user queries.  
-It supports both lexical and semantic retrieval approaches, enabling more accurate and context-aware search results.
+The system ingests raw news documents, parses them using an LLM, splits them into semantic chunks, and converts them into vector embeddings.  
+A vector index based on **HNSW (Hierarchical Navigable Small World)** is then used to efficiently retrieve the most relevant document chunks for a given user query.
 
-This project was developed collaboratively as a team effort, with contributions across data processing, indexing, model integration, and system design.
+The retrieved results are integrated into a **Retrieval-Augmented Generation (RAG)** pipeline, enabling downstream LLMs to generate informed, context-aware responses grounded in the retrieved documents.
+
+This project was developed collaboratively as a team effort, with shared contributions in system design, retrieval pipeline development, and experimentation.
 
 ---
 
-## 🧠 Key Features
+## 🧠 Core IR Pipeline
 
-- Document preprocessing and text normalization  
-- Keyword-based retrieval using classical IR techniques  
-- Semantic retrieval using vector representations  
-- Ranking and relevance scoring  
-- Modular architecture for easy experimentation and extension  
-- Dockerized environment for reproducible setup
+1. **LLM-based Document Parsing**  
+   - Used a Large Language Model to clean, structure, and normalize raw news documents.
+   - Extracted meaningful textual segments suitable for retrieval.
+
+2. **Chunking & Embedding Generation**  
+   - Split documents into semantic chunks.
+   - Generated dense vector embeddings for each chunk using an embedding model.
+
+3. **Vector Indexing with HNSW**  
+   - Indexed embeddings using an HNSW-based vector store.
+   - Enabled fast and scalable approximate nearest neighbor (ANN) search.
+
+4. **Semantic Retrieval**  
+   - Retrieved the most relevant document chunks based on vector similarity.
+   - Ranked results by relevance scores.
+
+5. **RAG (Retrieval-Augmented Generation)**  
+   - Integrated retrieved chunks into a RAG pipeline.
+   - Provided grounded context to LLMs for accurate answer generation.
+
+---
+
+## ✨ Key Features
+
+- LLM-powered document parsing and preprocessing  
+- Semantic chunking and dense vector embeddings  
+- Fast similarity search using HNSW indexing  
+- Retrieval-Augmented Generation (RAG) pipeline  
+- Modular IR architecture for experimentation  
+- Dockerized setup for reproducibility  
 
 ---
 
 ## 🛠️ Technologies & Libraries
 
-**Programming Language**
+### **Programming Language**
 - Python
 
-**NLP & Information Retrieval**
-- Scikit-learn  
-- TF-IDF Vectorizer  
-- Word Embeddings  
-- Similarity Metrics
+### **Information Retrieval**
+- Large Language Models (LLMs)  
+- Embedding Models  
+- Vector Similarity Search  
+- HNSW (Approximate Nearest Neighbor Indexing)  
+- Retrieval-Augmented Generation (RAG)
 
-**Data Processing**
+### **Data Processing**
 - NumPy  
 - Pandas  
 
-**Infrastructure & Tools**
+### **Infrastructure & Tools**
 - Docker  
 - Git & GitHub  
-- Markdown
+- OpenSearch (Same ElasticSearch but Open Source)  
+- Kibana  
+- Postman 
 
 ---
 
