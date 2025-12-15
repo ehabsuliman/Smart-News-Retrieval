@@ -1,4 +1,4 @@
-# Smart Document Retrieval
+# Smart News Retrieval
 
 Smart Document Retrieval is an information retrieval system designed to efficiently index, search, and retrieve documents using modern NLP techniques.  
 The project focuses on combining traditional information retrieval methods with machine learning and semantic representations to improve search relevance and accuracy.
@@ -57,4 +57,13 @@ smart-News-Retrieval/
 ├── archive/ # Archived resources and experiments
 ├── README.md # Project documentation
 └── requirements.txt # Python dependencies
+
+
+---
+
+## ⚙️ Setup & Installation
+
+### 1️⃣ Clone the repository
+git clone https://github.com/ehabsuliman/Smart-News-Retrieval.git
+cd Smart News Retrieval
 
