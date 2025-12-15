@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: smart-opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9201:9200"   # 👈 بورت جديد
+    networks:
+      - smart-net
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    container_name: smart-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5602:5601"   # 👈 بورت جديد
+    depends_on:
+      - opensearch
+    networks:
+      - smart-net
+
+volumes:
+  opensearch-data:
+
+networks:
+  smart-net:
