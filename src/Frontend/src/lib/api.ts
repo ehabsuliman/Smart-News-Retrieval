@@ -20,6 +20,7 @@ export interface SearchRequest {
 export interface SearchDocument {
   id: string;
   score: number;
+  relevanceScore: number; 
   title: string;
   content: string;
   date: string;

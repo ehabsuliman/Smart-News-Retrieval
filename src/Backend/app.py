@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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" # Replace with your actual Groq API key or load from env
 # Configuration
 ES_HOST = "http://localhost:9200"
 INDEX_NAME = "news_reuters_docs"
@@ -400,17 +400,12 @@ def autocomplete(request: QueryRequest):
 
 @app.post("/search")
 def search_documents(request: QueryRequest):
-    """
-    BACKWARD COMPATIBLE - all new fields are optional
-    Enhanced search with fuzzy matching, recency, and location awareness.
-    """
     try:
         query = request.query
         top_k = request.top_k
         user_location = request.user_location.dict() if request.user_location else None
         temporal_filter = request.temporal_filter.dict() if request.temporal_filter else None
         
-        # Use the unified hybrid_search function (no duplication!)
         docs = hybrid_search(
             query=query,
             user_location=user_location,
@@ -418,12 +413,19 @@ def search_documents(request: QueryRequest):
             top_k=top_k
         )
         
+        EXCELLENT_SCORE = 180.0
+
         # Format response
         documents = []
         for doc in docs:
+            normalized_score = min(doc["score"] / EXCELLENT_SCORE, 1.0)
+            print(f"[NORMALIZE] {doc['title'][:50]} | Raw: {doc['score']:.2f} → Normalized: {normalized_score:.2f}")
+
             documents.append({
                 "id": doc.get("id", ""),
                 "score": doc["score"],
+                "relevanceScore": round(normalized_score, 2),
+
                 "title": doc["title"],
                 "content": doc["content"],
                 "date": doc["date"],

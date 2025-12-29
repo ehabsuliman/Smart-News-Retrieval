@@ -6,7 +6,8 @@ export interface SearchResult {
   title: string;
   date: string;
   snippet: string;
-  relevanceScore: number;
+  score: number;           // Raw ES score
+  relevanceScore: number;  // Normalized 0-1
   places: string[];
   temporalExpressions: string[];
 }

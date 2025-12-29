@@ -1,18 +1,21 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react"; // ✅ ADD useEffect here
+import { useNavigate, useSearchParams } from "react-router-dom"; // ✅ ADD useSearchParams
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { FilterPanel, FilterState } from "@/components/search/FilterPanel";
-import { Database, Zap, Globe, MessageSquare, ArrowRight, MapPin, Clock, FileText, Building, Users } from "lucide-react";
+import { GeoMap, GeoPoint } from "@/components/analytics/GeoMap";
+import { Database, Zap, Globe, MessageSquare, ArrowRight, MapPin, Clock, FileText, Building, Users, Map as MapIcon } from "lucide-react"; // ✅ ADD Map icon
 import { Button } from "@/components/ui/button";
 import { api, SearchResponse, SearchDocument } from "@/lib/api";
 
 export default function Index() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams(); // ✅ ADD THIS
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(false); // ✅ ADD THIS
   const [filters, setFilters] = useState<FilterState>({
     dateFrom: "",
     dateTo: "",
@@ -20,14 +23,57 @@ export default function Index() {
     semanticSearch: true,
   });
 
+  // ✅ ADD THIS: Transform search results into GeoPoints
+  const getGeoPoints = (): GeoPoint[] => {
+    if (!searchResult?.documents) return [];
+    
+    const locationMap = new Map<string, GeoPoint>();
+    
+    searchResult.documents.forEach(doc => {
+      if (doc.geo_location?.lat && doc.geo_location?.lon) {
+        const key = `${doc.geo_location.lat},${doc.geo_location.lon}`;
+        
+        if (locationMap.has(key)) {
+          const existing = locationMap.get(key)!;
+          existing.count += 1;
+          existing.documents?.push(doc);
+          // Update latest date if newer
+          if (doc.date && (!existing.latest_date || doc.date > existing.latest_date)) {
+            existing.latest_date = doc.date;
+            existing.summary = doc.content.substring(0, 200);
+          }
+        } else {
+          locationMap.set(key, {
+            lat: doc.geo_location.lat,
+            lon: doc.geo_location.lon,
+            count: 1,
+            label: doc.dateline || doc.places[0] || "Unknown Location",
+            latest_date: doc.date,
+            summary: doc.content.substring(0, 200),
+            documents: [doc]
+          });
+        }
+      }
+    });
+    
+    return Array.from(locationMap.values());
+  };
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q');
+    if (queryFromUrl && !searchResult) {
+      handleSearch(queryFromUrl);
+    }
+  }, [searchParams]); // Only run when URL changes
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     setIsLoading(true);
     setError(null);
     setSearchResult(null);
+    setShowMap(false); // ✅ ADD THIS: Reset map visibility on new search
+    setSearchParams({ q: query });
 
     try {
-      // Build enhanced query with filters
       let enhancedQuery = query;
       if (filters.location) {
         enhancedQuery += ` in ${filters.location}`;
@@ -64,7 +110,7 @@ export default function Index() {
       <Header />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
+        {/* Hero Section - Keep as is */}
         {!searchResult && !isLoading && !error && (
           <div className="max-w-3xl mx-auto text-center mb-12 animate-fade-in">
             <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -95,12 +141,10 @@ export default function Index() {
 
         {(searchResult || isLoading || error) && (
           <div className="mt-8 flex gap-6">
-            {/* Filters */}
             <aside className="w-64 shrink-0 hidden lg:block">
               <FilterPanel onFilterChange={setFilters} />
             </aside>
 
-            {/* Results */}
             <div className="flex-1">
               {isLoading ? (
                 <div className="space-y-4">
@@ -125,25 +169,45 @@ export default function Index() {
                 </div>
               ) : searchResult ? (
                 <div className="space-y-4 animate-fade-in">
-                  {/* Search Info */}
+                  {/* ✅ MODIFIED: Search Info with Map Toggle */}
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
                       Found <span className="font-medium text-foreground">{searchResult.total}</span> documents for "
                       <span className="font-medium text-foreground">{searchQuery}</span>"
                     </p>
-                    <Button variant="outline" size="sm" onClick={handleContinueInChat}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Ask AI about results
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="flex gap-2">
+                      {/* ✅ ADD THIS: Map Toggle Button */}
+                      {getGeoPoints().length > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowMap(!showMap)}
+                        >
+                          <MapIcon className="w-4 h-4 mr-2" />
+                          {showMap ? "Hide Map" : "Show Map"}
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" onClick={handleContinueInChat}>
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Ask AI about results
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Document Results */}
+                  {/* ✅ ADD THIS: Conditional Map Display */}
+                  {showMap && getGeoPoints().length > 0 && (
+                    <div className="mb-6">
+                      <GeoMap points={getGeoPoints()} />
+                    </div>
+                  )}
+
+                  {/* Document Results - Keep as is */}
                   {searchResult.documents.map((doc) => (
                     <DocumentCard key={doc.id} document={doc} formatScore={formatScore} />
                   ))}
 
-                  {/* Continue to Chat CTA */}
+                  {/* Continue to Chat CTA - Keep as is */}
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center">
                     <MessageSquare className="w-8 h-8 text-primary mx-auto mb-3" />
                     <h3 className="font-semibold mb-2">Want to explore further?</h3>
@@ -202,10 +266,10 @@ function DocumentCard({ document, formatScore }: DocumentCardProps) {
             <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all"
-                style={{ width: `${formatScore(document.score)}%` }}
+                style={{ width: `${document.relevanceScore * 100}%` }} 
               />
             </div>
-            <span className="text-xs font-medium text-foreground w-8">{formatScore(document.score)}%</span>
+            <span className="text-xs font-medium text-foreground w-8">{Math.round(document.relevanceScore * 100)}%</span>
           </div>
         </div>
       </div>
